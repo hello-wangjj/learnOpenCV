@@ -51,8 +51,8 @@ int main()
 	cv::namedWindow("Watersheds");
 	cv::imshow("Watersheds", segmenter.getWatersheds());
 
-
-	// Open another image
+	
+	// Open another image 
 	Mat  image = imread("tower.jpg");
 
 	// Identify background pixels
@@ -77,7 +77,7 @@ int main()
 	cv::namedWindow("Watersheds of foreground object");
 	cv::imshow("Watersheds of foreground object", segmenter.getWatersheds());
 
-	// Open another image
+	// Open another image 
 	image = cv::imread("tower.jpg");
 
 	// define bounding rectangle 
@@ -108,6 +108,8 @@ int main()
 	cv::namedWindow("Segmented Image");
 	cv::imshow("Segmented Image", foreground);
 
+
+	//GrabCut
 	// Open another image
 	image = cv::imread("group.jpg");
 
