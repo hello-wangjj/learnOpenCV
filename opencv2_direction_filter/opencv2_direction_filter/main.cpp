@@ -2,6 +2,7 @@
 #include <iostream>
 #include <iomanip>
 #include "laplacian.h"
+#include "sharpen2D.h"
 using namespace std;
 using namespace cv;
 int main()
@@ -160,6 +161,11 @@ int main()
 	cv::namedWindow("Original Image with window");
 	cv::imshow("Original Image with window", image);
 
+	sharp2d H1;
+	Mat sharpImg;
+	H1.sharpen2D(src,sharpImg);
+	namedWindow("sharpImg");
+	imshow("sharpImg", sharpImg);
 
 	
 
