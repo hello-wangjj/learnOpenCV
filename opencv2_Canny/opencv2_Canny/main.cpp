@@ -1,8 +1,10 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <iomanip>
+#include "LinesFinder.h"
 using namespace cv;
 using namespace std;
+#define  PI 3.1415926
 
 int main()
 {
@@ -31,7 +33,7 @@ int main()
 	//imshow("sobel_y_y", sobel_y);
 	Mat sobel_norm;
 	sobel_norm = abs(sobel_x) + abs(sobel_y);
-	imshow("sobel norm", sobel_norm);
+	//imshow("sobel norm", sobel_norm);
 
 	double sobel_min, sobel_max;
 	minMaxLoc(sobel_norm, &sobel_min, &sobel_max);
@@ -73,7 +75,48 @@ int main()
 	threshold(dst, dst, 128, 255, THRESH_BINARY_INV);
 	imshow("abs", dst);
 
+	//hough
+	vector<Vec2f> lines;
+	HoughLines(countours, lines, 1, PI / 180, 80);
 
+	// Draw the lines
+	cv::Mat result(countours.rows, countours.cols, CV_8U, cv::Scalar(255));
+	image.copyTo(result);
+
+	std::cout << "Lines detected: " << lines.size() << std::endl;
+
+	vector<Vec2f>::const_iterator it = lines.begin();
+	while (it!=lines.end())
+	{
+		float rho = (*it)[0]; //æ‡¿Î rho
+		float theta = (*it)[1]; //Ω«∂»theta
+		if (theta < PI / 4||theta>3.*PI/4.)
+		{
+			Point pt1(rho / cos(theta),0);
+			Point pt2((rho - result.rows*sin(theta)) / cos(theta), result.cols);
+			line(image, pt1, pt2, Scalar(255), 1);
+		}
+		else
+		{
+			Point pt1(0, rho/sin(theta));
+			Point pt2(result.cols, (rho - result.cols*cos(theta)) / sin(theta));
+			line(image, pt1, pt2, Scalar(255), 1);
+		}
+		++it;
+	}
+	imshow("hough", image);
+
+
+	//houghP
+	linesFinder finder;
+	finder.setmLengthAndmGap(100, 20);
+	finder.setminVote(80);
+	vector<Vec4i> lines2;
+	lines2= finder.findLines(countours);
+	cout << "lines number:" <<lines2.size()<<endl;
+	finder.drawDetectorLines(src);
+	namedWindow("hough_p", WINDOW_AUTOSIZE);
+	imshow("hough_p", src);
 
 	waitKey(0);
 }
