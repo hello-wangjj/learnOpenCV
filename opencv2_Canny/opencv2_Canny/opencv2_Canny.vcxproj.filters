@@ -26,5 +26,8 @@
     <ClInclude Include="LinesFinder.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="circlesFinder.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

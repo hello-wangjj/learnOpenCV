@@ -14,8 +14,8 @@ public:
 
 	// Set the resolution of the accumulator
 	void setAccResolution(double drho, double dTheta){
-		dTheta = deltaTheta;
-		drho = deltaRho;
+		deltaTheta=dTheta;
+		deltaRho=drho;
 	}
 	void setminVote(int mVote){
 		minVote = mVote;

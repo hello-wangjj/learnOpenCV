@@ -2,6 +2,7 @@
 #include <opencv2/opencv.hpp>
 #include <iomanip>
 #include "LinesFinder.h"
+#include "circlesFinder.h"
 using namespace cv;
 using namespace std;
 #define  PI 3.1415926
@@ -117,6 +118,20 @@ int main()
 	finder.drawDetectorLines(src);
 	namedWindow("hough_p", WINDOW_AUTOSIZE);
 	imshow("hough_p", src);
+
+	//houghCircle
+	Mat circle = imread("chariot.jpg");
+	Mat circle_origin = imread("chariot.jpg");
+	circlesFinder finderC;
+	finderC.setdpAndmindist(2, 50);
+	finderC.setparam(200, 100),
+	finderC.setRadius(25, 100);
+	vector<Vec3f> circles;
+	circles = finderC.findcircles(circle);
+	cout << "circles number:" << circles.size() << endl;
+	finderC.drawCircles(circle_origin);
+	namedWindow("hough_circle", WINDOW_AUTOSIZE);
+	imshow("hough_circle", circle_origin);
 
 	waitKey(0);
 }

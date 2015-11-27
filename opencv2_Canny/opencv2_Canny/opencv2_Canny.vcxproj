@@ -81,6 +81,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="circlesFinder.h" />
     <ClInclude Include="edgeDetector.h" />
     <ClInclude Include="LinesFinder.h" />
   </ItemGroup>
