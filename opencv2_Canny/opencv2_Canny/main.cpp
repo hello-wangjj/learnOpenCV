@@ -133,5 +133,44 @@ int main()
 	namedWindow("hough_circle", WINDOW_AUTOSIZE);
 	imshow("hough_circle", circle_origin);
 
+	//fit line
+
+	//int n = 0;
+	Mat oneline(countours.size(), CV_8U, Scalar(0));
+	for (int n = 0; n !=lines2.size(); n++){
+		line(oneline, Point(lines2[n][0], lines2[n][1]), Point(lines2[n][2], lines2[n][3]), Scalar(255), 5);
+		
+	}
+	bitwise_and(countours, oneline, oneline);
+	threshold(oneline, oneline, 180, 255, THRESH_BINARY_INV);
+	imshow("oneline", oneline);
+
+	vector<Point>points;
+	for (int y = 0; y < oneline.rows; y++){
+		uchar*rowPtr = oneline.ptr<uchar>(y);
+		for (int x = 0; x < oneline.cols; x++){
+			if (rowPtr[x]){
+				points.push_back(Point(x, y));
+			}
+		}
+	}
+	Vec4f lines3;
+	fitLine(Mat(points), lines3, CV_DIST_L2, 0, 0.01, 0.01);//前2项是反向向量，后两项是直线点坐标
+	cout << "line: (" << lines3[0] << "," << lines3[1] << ")(" << lines3[2] << "," << lines3[3] << ")\n";
+
+	int x0 = lines3[2];//直线上的点
+	int y0 = lines3[3];
+	int x1 = x0 - 200 * lines3[0];//直线上的向量
+	int y1 = y0 - 200 * lines3[1];
+	Mat origin = imread("road.jpg");
+	line(origin, Point(x0, y0), Point(x1, y1), Scalar(0), 3);
+	imshow("fitline", origin);
+
+	//fit ellispse
+	RotatedRect rrect = fitEllipse(Mat(points));
+	ellipse(image, rrect, Scalar(0));
+	imshow("ellispse", image);
+
+
 	waitKey(0);
 }

@@ -39,6 +39,7 @@ public:
 			++it2;
 		}
 	}
+
 private:
 	Mat img;
 	vector<Vec4i> lines;
