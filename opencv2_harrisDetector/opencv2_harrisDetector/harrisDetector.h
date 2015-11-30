@@ -26,6 +26,35 @@ public:
 	dilate(cornerStrength, dilated, Mat());
 	compare(cornerStrength, dilated, localmax, CMP_EQ);
 	}
+	Mat getCornerMap(double qualitylevel){
+		Mat cornerMap;
+		threshold1 = qualitylevel*maxStrength;
+		threshold(cornerStrength, cornerTh, threshold1, 255, THRESH_BINARY);
+		cornerTh.convertTo(cornerMap, CV_8U);
+		bitwise_and(cornerMap, localmax,cornerMap);
+		return cornerMap;
+	}
+	void getCorners(vector<Point> &points, double qualityLevel){
+		Mat cornerMap = getCornerMap(qualityLevel);
+		getCorners(points, cornerMap);
+	}
+	void getCorners(vector<Point>&points, Mat &cornerMap){
+		for (int y = 0; y < cornerMap.rows; y++){
+			const uchar*rowPtr = cornerMap.ptr<uchar>(y);
+			for (int x = 0; x < cornerMap.cols; x++){
+				if (rowPtr[x]){
+					points.push_back(Point(x, y));
+				}
+			}
+		}
+	}
+	void drawOnImg(Mat &img, vector<Point>&poins, Scalar color = Scalar::all(255), int radius = 3, int thickness = 2){
+		vector<Point>::const_iterator itp = poins.begin();
+		while (itp != poins.end()){
+			circle(img, *itp, radius, color, thickness);
+			++itp;
+		}
+	}
 private:
 	Mat cornerStrength; //表示角点强度的32位浮点图像
 	Mat cornerTh;		//表示阈值化之后的32位浮点图像

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include "harrisDetector.h"
 using namespace cv;
 using namespace std;
 int main()
@@ -14,7 +15,13 @@ int main()
 	threshold(cornerStrength, harrisCorners, threshold1, 255, THRESH_BINARY_INV);
 	imshow("harrisCorner", harrisCorners);
 
-
+	//构造的函数
+	harrisDetector harris;
+	harris.detect(image);
+	vector<Point> pts;
+	harris.getCorners(pts, 0.01);
+	harris.drawOnImg(image,pts);
+	imshow("harris", image);
 
 	waitKey(0);
 }
