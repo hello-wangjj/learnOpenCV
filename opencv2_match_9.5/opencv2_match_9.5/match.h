@@ -1,19 +1,30 @@
-#ifndef MATCH_H
-#define MATCH_H
 #include <opencv2/opencv.hpp>
 #include <iostream>
-#include <opencv2/features2d/features2d.hpp>
-#include <opencv2/calib3d/calib3d.hpp>
-#include <opencv2/legacy/legacy.hpp>
 #include <opencv2/nonfree/nonfree.hpp>
+#include <opencv2/features2d/features2d.hpp>
+#include <opencv2/legacy/legacy.hpp>
 using namespace std;
 using namespace cv;
-class RobusMatcher
-{
+class RobustMatcher {
+
+private:
+
+	// pointer to the feature point detector object
+	cv::Ptr<cv::FeatureDetector> detector;
+	// pointer to the feature descriptor extractor object
+	cv::Ptr<cv::DescriptorExtractor> extractor;
+	float ratio; // max ratio between 1st and 2nd NN
+	bool refineF; // if true will refine the F matrix
+	double distance; // min distance to epipolar
+	double confidence; // confidence level (probability)
+
 public:
-	RobusMatcher() :ratio(0.65f), reflineF(true), confidence(0.99), distance(3.0){
-		detector = new SurfFeatureDetector();
-		extractor = new SurfDescriptorExtractor();
+
+	RobustMatcher() : ratio(0.65f), refineF(true), confidence(0.99), distance(3.0) {
+
+		// SURF is the default feature
+		detector = new cv::SurfFeatureDetector();
+		extractor = new cv::SurfDescriptorExtractor();
 	}
 
 	// Set the feature detector
@@ -22,10 +33,12 @@ public:
 		detector = detect;
 	}
 
+	// Set descriptor extractor
+	void setDescriptorExtractor(cv::Ptr<cv::DescriptorExtractor>& desc) {
 
-	void setDescriptorExtractor(Ptr<SurfDescriptorExtractor>&desc){
 		extractor = desc;
 	}
+
 	// Set the minimum distance to epipolar in RANSAC
 	void setMinDistanceToEpipolar(double d) {
 
@@ -47,40 +60,7 @@ public:
 	// if you want the F matrix to be recalculated
 	void refineFundamental(bool flag) {
 
-		reflineF = flag;
-	}
-	Mat match(Mat &img1, Mat &img2, vector<DMatch>&matches, vector<KeyPoint> &keypoints1, vector<KeyPoint>&keypoints2){
-		detector->detect(img1, keypoints1);
-		detector->detect(img2, keypoints2);
-		Mat descriptors1, descriptors2;
-		extractor->compute(img1, keypoints1, descriptors1);
-		extractor->compute(img2, keypoints2, descriptors2);
-		BruteForceMatcher<L2<float>> matcher;
-		vector<vector<DMatch>> matches1;
-		matcher.knnMatch(descriptors1, descriptors2, matches1, 2);
-		vector<vector<DMatch>> matches2;
-		matcher.knnMatch(descriptors2, descriptors1, matches2, 2);
-		
-		// 3. Remove matches for which NN ratio is > than threshold
-
-		// clean image 1 -> image 2 matches
-		int removed = ratioTest(matches1);
-		std::cout << "Number of matched points 1->2 (ratio test) : " << matches1.size() - removed << std::endl;
-		// clean image 2 -> image 1 matches
-		removed = ratioTest(matches2);
-		std::cout << "Number of matched points 1->2 (ratio test) : " << matches2.size() - removed << std::endl;
-
-		// 4. Remove non-symmetrical matches
-		std::vector<cv::DMatch> symMatches;
-		symmetryTest(matches1, matches2, symMatches);
-
-		std::cout << "Number of matched points (symmetry test): " << symMatches.size() << std::endl;
-
-		// 5. Validate matches using RANSAC
-		cv::Mat fundemental = ransacTest(symMatches, keypoints1, keypoints2, matches);
-
-		// return the found fundemental matrix
-		return fundemental;
+		refineF = flag;
 	}
 
 	// Clear matches for which NN ratio is > than threshold
@@ -114,7 +94,6 @@ public:
 
 		return removed;
 	}
-
 
 	// Insert symmetrical matches in symMatches vector
 	void symmetryTest(const std::vector<std::vector<cv::DMatch>>& matches1,
@@ -194,7 +173,7 @@ public:
 
 		std::cout << "Number of matched points (after cleaning): " << outMatches.size() << std::endl;
 
-		if (reflineF) {
+		if (refineF) {
 			// The F matrix will be recomputed with all accepted matches
 
 			// Convert keypoints into Point2f for final F computation	
@@ -223,18 +202,67 @@ public:
 		return fundemental;
 	}
 
+	// Match feature points using symmetry test and RANSAC
+	// returns fundemental matrix
+	cv::Mat match(cv::Mat& image1, cv::Mat& image2, // input images 
+		std::vector<cv::DMatch>& matches, // output matches and keypoints
+		std::vector<cv::KeyPoint>& keypoints1, std::vector<cv::KeyPoint>& keypoints2) {
 
-private:
-	Ptr<FeatureDetector> detector;
-	Ptr<DescriptorExtractor> extractor;
+		// 1a. Detection of the SURF features
+		detector->detect(image1, keypoints1);
+		detector->detect(image2, keypoints2);
 
-	float ratio;
-	bool reflineF;
-	double distance;
-	double confidence;
+		std::cout << "Number of SURF points (1): " << keypoints1.size() << std::endl;
+		std::cout << "Number of SURF points (2): " << keypoints2.size() << std::endl;
 
+		// 1b. Extraction of the SURF descriptors
+		cv::Mat descriptors1, descriptors2;
+		extractor->compute(image1, keypoints1, descriptors1);
+		extractor->compute(image2, keypoints2, descriptors2);
+
+		std::cout << "descriptor matrix size: " << descriptors1.rows << " by " << descriptors1.cols << std::endl;
+
+		// 2. Match the two image descriptors
+
+		// Construction of the matcher 
+		cv::BruteForceMatcher<cv::L2<float>> matcher;
+
+		// from image 1 to image 2
+		// based on k nearest neighbours (with k=2)
+		std::vector<std::vector<cv::DMatch>> matches1;
+		matcher.knnMatch(descriptors1, descriptors2,
+			matches1, // vector of matches (up to 2 per entry) 
+			2);		  // return 2 nearest neighbours
+
+		// from image 2 to image 1
+		// based on k nearest neighbours (with k=2)
+		std::vector<std::vector<cv::DMatch>> matches2;
+		matcher.knnMatch(descriptors2, descriptors1,
+			matches2, // vector of matches (up to 2 per entry) 
+			2);		  // return 2 nearest neighbours
+
+		std::cout << "Number of matched points 1->2: " << matches1.size() << std::endl;
+		std::cout << "Number of matched points 2->1: " << matches2.size() << std::endl;
+
+		// 3. Remove matches for which NN ratio is > than threshold
+
+		// clean image 1 -> image 2 matches
+		int removed = ratioTest(matches1);
+		std::cout << "Number of matched points 1->2 (ratio test) : " << matches1.size() - removed << std::endl;
+		// clean image 2 -> image 1 matches
+		removed = ratioTest(matches2);
+		std::cout << "Number of matched points 1->2 (ratio test) : " << matches2.size() - removed << std::endl;
+
+		// 4. Remove non-symmetrical matches
+		std::vector<cv::DMatch> symMatches;
+		symmetryTest(matches1, matches2, symMatches);
+
+		std::cout << "Number of matched points (symmetry test): " << symMatches.size() << std::endl;
+
+		// 5. Validate matches using RANSAC
+		cv::Mat fundemental = ransacTest(symMatches, keypoints1, keypoints2, matches);
+
+		// return the found fundemental matrix
+		return fundemental;
+	}
 };
-
-
-
-#endif
