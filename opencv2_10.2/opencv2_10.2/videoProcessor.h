@@ -11,7 +11,8 @@ public:
 		void(*fameProssingCallback)(Mat &, Mat &)){
 		process = fameProssingCallback;
 	}
-	bool setIput(string fileName){
+	
+	bool setInput(string fileName){
 		fnumber = 0;
 		capture.release();
 		return capture.open(fileName);
@@ -62,7 +63,7 @@ public:
 	}
 	bool isOpened(){
 		//capture.isOpened();
-		return capture.isOpened() || !images.empty();
+		return capture.isOpened();
 	}
 	void setDelay(int d){
 		delay = d;
@@ -88,13 +89,12 @@ public:
 	// return the frame rate
 	double getFrameRate() {
 
-		// undefined for vector of images
-		if (images.size() != 0) return 0;
-
 		double r = capture.get(CV_CAP_PROP_FPS);
 		return r;
 	}
 
+
+	
 
 private:
 	VideoCapture capture;
@@ -107,10 +107,6 @@ private:
 	long frameToStop;//Í£Ö¹Ö¡Êý
 	bool stop;
 
-	// vector of image filename to be used as input
-	vector<string> images;
-	// image vector iterator
-	vector<string>::const_iterator itImg;
+	
 };
-
 

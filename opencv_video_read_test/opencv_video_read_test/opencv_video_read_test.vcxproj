@@ -11,9 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{E1B429C5-D1F3-4B33-B1BD-080FEED01125}</ProjectGuid>
+    <ProjectGuid>{3E0E1F07-C1BF-402B-BA93-B8475A809E2D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>opencv2_102</RootNamespace>
+    <RootNamespace>opencv_video_read_test</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -79,10 +79,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="frameprocessor.h" />
-    <ClInclude Include="videoProcessor.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
