@@ -73,7 +73,7 @@ int main()
 	// Output filename
 	//	processor.setOutput("../output/bikeOut",".jpg");
 	char codec[4];
-	processor.setOutput("../output/bike.avi", processor.getCodec(codec), processor.getFrameRate());
+	processor.setOutput("bike2.avi", processor.getCodec(codec), processor.getFrameRate());
 	std::cout << "Codec: " << codec[0] << codec[1] << codec[2] << codec[3] << std::endl;
 
 	// Position the stream at frame 300
